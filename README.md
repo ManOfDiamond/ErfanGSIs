@@ -9,7 +9,8 @@ Thanks VegaZS for his Java BoboBot
 
 ## Downloads "NipponGSIs"
 Download ported GSI's from here!: https://sourceforge.net/projects/diamondgsiprojekt/files/  
-Join us in telegram!: https://t.me/DiamondGSIGroup 
+Join us in telegram!: https://t.me/DiamondGSIGroup
+
 For updates follow here!: https://t.me/Diamond_GSI 
 
 
