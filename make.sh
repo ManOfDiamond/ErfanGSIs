@@ -79,7 +79,7 @@ toolsdir="$LOCALDIR/tools"
 romsdir="$LOCALDIR/roms"
 prebuiltdir="$LOCALDIR/prebuilt"
 scriptsdir="$LOCALDIR/scripts"
-sourcepath="$1"
+sourcepath="$LOCALDIR/$sourcepath"
 
 echo "Create Temp dir"
 rm -rf $tempdir
