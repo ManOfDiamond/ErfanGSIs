@@ -1,92 +1,69 @@
 #!/bin/bash
-#Written By @nnippon!, credits for all peeps ofc
+# Written By @nnippon!, credits for all peeps ofc
+# Kang?, Don't forget to give proper credits!
+# Based on Erfan tools so
 
-#Variables
+# Define environment dirs
 LOCALDIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 extractor="$LOCALDIR/tools/Firmware_extractor/extractor.sh"
 working="$LOCALDIR/work"
-outdir="$LOCALDIR/cache"
+cachedir="$LOCALDIR/cache"
 
-echo "Ensure everything is fine for start . . . . "
-        bash update.sh
-	rm -rf $outdir $working
+# Let's GO
+echo "Prepare env..."
+	bash update.sh
+	umount -l $working
+	rm -rf $cachedir $working
+	mkdir -p "$cachedir" "$working"
 
-echo "Creating cache and work folders . . . . "
-	mkdir -p "$outdir" "$working"
+echo "Extracting imgs from OTA..."
+	bash $extractor $1 $cachedir
 
-echo "Extracting ROM zip . . . . "
-	bash $extractor $1 $outdir
-	mv $outdir/system.img $outdir/system-old.img
+echo "Creating tmp img..."
+	dd if=/dev/zero of=new.img bs=6k count=1048576
+	mkfs.ext4 new.img
+	tune2fs -c0 -i0 new.img
 
-echo "Creating 6GB dummy image . . . . "
-	dd if=/dev/zero of=system.img bs=6k count=1048576
-	mkfs.ext4 system.img
-	tune2fs -c0 -i0 system.img
-
-echo "Merging system . . . . "
-	mkdir $outdir/system-old
-	mount -o loop system.img $working
-	mount -o ro $outdir/system-old.img $outdir/system-old
-	cp -v -r -p $outdir/system-old/* $working/ &> /dev/null
+echo "Merging process started..."
+	echo "system.img"
+	mkdir $cachedir/system
+	mount -o loop new.img $working
+	mount -o ro $cachedir/system.img $cachedir/system
+	cp -vrp $cachedir/system/* $working/ &> /dev/null
 	sync
-	umount -l $outdir/system-old
 
-if [ -f "$outdir/product.img" ]; then
-echo "Merging product . . . . "
-	rm -rf $working/product
-	ln -s $working/product $working/product
-	rm -rf $working/system/product
-	mkdir $working/system/product
-	mkdir $outdir/product
-	mount -o ro $outdir/product.img $outdir/product
-	cp -v -r -p $outdir/product/* $working/system/product/ &> /dev/null
+if [ -f "$cachedir/product.img" ]; then
+	echo "product.img"
+	rm -rf $working/product $working/system/product 
+	mkdir $working/system/product $cachedir/product 
+	mount -o ro $cachedir/product.img $cachedir/product
+	ln -s /system/product $working/product
+	cp -vrp $cachedir/product/* $working/system/product/ &> /dev/null
 	sync
-	umount -l $outdir/product
 fi
 
-if [ -f "$outdir/system_ext.img" ]; then
-echo "Merging system_ext . . . . "
-	mkdir $outdir/system_ext
-	mount -o ro $outdir/system_ext.img $outdir/system_ext/
-	rm -rf $working/system_ext
-	rm -rf $working/system/system_ext
-	mkdir $working/system/system_ext
-	ln -s $working/system_ext $working/system_ext
-	cp -v -r -p $outdir/system_ext/* $working/system/system_ext/ &> /dev/n$
+if [ -f "$cachedir/system_ext.img" ]; then
+	echo "system_ext.img"
+	rm -rf $working/system_ext $working/system/system_ext
+	mkdir $working/system/system_ext $cachedir/system_ext
+	mount -o ro $cachedir/system_ext.img $cachedir/system_ext/ 
+	ln -s /system/system_ext $working/system_ext
+	cp -vrp $cachedir/system_ext/* $working/system/system_ext/ &> /dev/n$
 	sync
-	umount -l $outdir/system_ext
 fi
 
-if [ -f "$outdir/system_other.img" ]; then
-	echo "Merging system_other . . . . "
-	mkdir $outdir/system_other
-	mount -o ro $outdir/system_other.img $outdir/system_other/
-	cp -v -r -p $outdir/system_other/* $working/system/ &> /dev/null
-	sync
-	umount -l $outdir/system_other
-fi
-
-if [ -f "$outdir/opproduct.img" ]; then
-	echo "Merging opproduct . . . . "
-	mkdir $outdir/opproduct
-	mount -o ro $outdir/opproduct.img $outdir/opproduct/
-	cp -v -r -p $outdir/opproduct/* $working/oneplus/ &> /dev/null
-	sync
-	umount -l $outdir/opproduct
-fi
-
-if [ -f "$outdir/reserve.img" ]; then
-	echo "Merging reserve . . . . "
+if [ -f "$cachedir/reserve.img" ]; then
+	echo "reserve.img"
 	rm -rf $working/system/reserve
-	mkdir $working/system/reserve
-	mkdir $outdir/reserve
-	mount -o ro $outdir/reserve.img $outdir/reserve/
-	cp -v -r -p $outdir/reserve/* $working/system/reserve/ &> /dev/null
+	mkdir $working/system/reserve $cachedir/reserve
+	mount -o ro $cachedir/reserve.img $cachedir/reserve/
+	cp -vrp $cachedir/reserve/* $working/system/reserve/ &> /dev/null
 	sync
-	umount -l $outdir/reserve
 fi
 
-echo "Finalizing . . . . "
-rm -rf $outdir
+echo "Clearing cache..."
+	umount -l $cachedir/*
+	rm -rf $cachedir
+echo "Done!"
 
-echo "Done"
+# By @nnippon

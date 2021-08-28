@@ -39,7 +39,7 @@ do
     fi
 done
 if [ "$flag" == "false" ]; then
-    echo "$romtype is not supported rom, supported roms:"
+    echo "$romtype is not supported, supported roms:"
     for dir in "${roms[@]}"
     do
         ver=`echo "$dir" | rev | cut -d "/" -f 2 | rev`
@@ -54,7 +54,7 @@ case "$outputtype" in
     *"Aonly"*) flag=true ;;
 esac
 if [ "$flag" == "false" ]; then
-    echo "$outputtype is not supported type, supported types:"
+    echo "$outputtype is not supported, supported types:"
     echo "AB"
     echo "Aonly"
     exit 1
@@ -81,23 +81,22 @@ prebuiltdir="$LOCALDIR/prebuilt"
 scriptsdir="$LOCALDIR/scripts"
 sourcepath="$LOCALDIR/$sourcepath"
 
-echo "Create Temp dir"
 rm -rf $tempdir
 mkdir -p "$systemdir"
 
 if [ "$sourcetype" == "Aonly" ]; then
-    echo "Warning: Aonly source detected, using P AOSP ramdisk"
+    echo "using P AOSP ramdisk"
     cd "$systemdir"
     tar xf "$prebuiltdir/ABrootDir.tar"
     cd "$LOCALDIR"
-    echo "Making copy of source rom to temp"
+    echo "Copying to temp"
     ( cd "$sourcepath" ; sudo tar cf - . ) | ( cd "$systemdir/system" ; sudo tar xf - ) &> /dev/null
     cd "$LOCALDIR"
     sed -i "/ro.build.system_root_image/d" "$systemdir/system/build.prop"
     sed -i "/ro.build.ab_update/d" "$systemdir/system/build.prop"
     echo "ro.build.system_root_image=false" >> "$systemdir/system/build.prop"
 else
-    echo "Making copy of source rom to temp"
+    echo "Copying to temp"
     ( cd "$systempath" ; sudo tar cf - . ) | ( cd "$systemdir" ; sudo tar xf - ) &> /dev/null
     if [[ -e "$sourcepath/mounted.txt" ]]; then
         for p in `cat "$sourcepath/mounted.txt"`; do
@@ -121,7 +120,7 @@ fi
 # Detect is the src treble ro.treble.enabled=true
 istreble=`cat $systemdir/system/build.prop | grep ro.treble.enabled | cut -d "=" -f 2`
 if [[ ! "$istreble" == "true" ]]; then
-    echo "source have treble line deleted, its ok"
+    echo "Not trebled but OK"
 fi
 
 # Detect Source API level
@@ -138,7 +137,7 @@ case "$sourcever" in
     *"9"*) flag=true ;;
     *"10"*) flag=true ;;
     *"11"*) flag=true ;;
-    *"S"*) flag=true ;;
+    *"12"*) flag=true ;;
 esac
 if [ "$flag" == "false" ]; then
     echo "$sourcever is not supported"
@@ -147,13 +146,13 @@ fi
 
 # Detect rom folder again
 if [[ ! -d "$romsdir/$sourcever/$romtype" ]]; then
-    echo "$romtype is not supported rom for android $sourcever"
+    echo "$romtype is not supported for $sourcever"
     exit 1
 fi
 
 # Detect arch
 if [[ ! -f "$systemdir/system/lib64/libandroid.so" ]]; then
-    echo "32bit source detected, weird flex but ok!"
+    echo "32bit source"
     # do something here?
 fi
 
@@ -162,7 +161,6 @@ $romsdir/$sourcever/$romtype/debloat.sh "$systemdir/system" 2>/dev/null
 $romsdir/$sourcever/$romtype/$romtypename/debloat.sh "$systemdir/system" 2>/dev/null
 
 # Start patching
-echo "Patching started..."
 $scriptsdir/fixsymlinks.sh "$systemdir/system" 2>/dev/null
 $scriptsdir/nukeABstuffs.sh "$systemdir/system" 2>/dev/null
 $prebuiltdir/vendor_vndk/make$sourcever.sh "$systemdir/system" 2>/dev/null
@@ -233,14 +231,13 @@ bytesToHuman() {
     done
     echo "$b$d ${S[$s]}"
 }
-echo "Raw Image Size: $(bytesToHuman $systemsize)" >> "$outputinfo"
+echo "Image Size: $(bytesToHuman $systemsize)" >> "$outputinfo"
 
-echo "Creating Image: $outputimagename"
+echo "Generating GSI: $outputimagename"
 # Use ext4fs to make image in P or older!
 if [ "$sourcever" == "9" ]; then
     useold="--old"
 fi
 $scriptsdir/mkimage.sh $systemdir $outputtype $systemsize $output $useold > $tempdir/mkimage.log
 
-echo "Remove Temp dir"
 rm -rf "$tempdir"

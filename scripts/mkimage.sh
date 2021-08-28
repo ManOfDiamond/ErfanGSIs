@@ -74,6 +74,7 @@ if [[ -f "$tempdir/file_contexts" ]]; then
     echo "/preload                u:object_r:rootfs:s0" >> "$tempdir/file_contexts"
     echo "/dpolicy                u:object_r:rootfs:s0" >> "$tempdir/file_contexts"
     echo "/pds                    u:object_r:rootfs:s0" >> "$tempdir/file_contexts"
+    echo "/fsg                    u:object_r:rootfs:s0" >> "$tempdir/file_contexts"
     echo "/tombstones             u:object_r:rootfs:s0" >> "$tempdir/file_contexts"
     echo "/factory                u:object_r:rootfs:s0" >> "$tempdir/file_contexts"
     echo "/oneplus                u:object_r:rootfs:s0" >> "$tempdir/file_contexts"

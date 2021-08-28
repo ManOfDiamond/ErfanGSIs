@@ -20,9 +20,7 @@ mkdir -p $1/product/overlay
 
 cp -fpr $thispath/nondevice_overlay/* $1/product/overlay/
 
-if [ -f $romdir/NODEVICEOVERLAY ]; then
-    echo "Using device specific overlays is not supported in this rom. Skipping..."
-else
+if [[ ! -f "$romdir/NODEVICEOVERLAY" ]]; then
     cp -fpr $thispath/overlay/* $1/product/overlay/
 fi
 
@@ -43,18 +41,12 @@ sed -i "/typetransition location_app/d" $1/etc/selinux/plat_sepolicy.cil
 
 ## Init style wifi fix
 # Some systems are using custom wifi services, don't apply this patch on those roms
-if [ -f $romdir/DONTPATCHWIFI ]; then
-    echo "Patching wifi-service for init style wifi is not supported in this rom. Skipping..."
-else
-    echo "Start Patching wifi-service for init style wifi..."
+if [[ ! -f "$romdir/DONTPATCHWIFI" ]]; then
     $thispath/initstylewifi/make.sh "$systempath"
 fi
 
 ## Brightness fix
 # Some systems are using custom light services, don't apply this patch on those roms
-if [ -f $romdir/DONTPATCHLIGHT ]; then
-    echo "Patching lights for brightness fix is not supported in this rom. Skipping..."
-else
-    echo "Start Patching Light Services for Brightness Fix..."
+if [[ ! -f "$romdir/DONTPATCHLIGHT" ]]; then
     $thispath/brightnessfix/make.sh "$systempath"
 fi
