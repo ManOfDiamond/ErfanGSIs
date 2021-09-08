@@ -6,9 +6,6 @@ thispath=`cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
 # Copy changes in system folder
 rsync -ra $thispath/system/ $1/
 
-# Include prebuilt overlays by default
-cat $thispath/rw-system.add.sh >> $1/bin/rw-system.sh
-
 # Append usefull stuff
 echo "ro.support_one_handed_mode=true" >> $1/build.prop
 echo "ro.boot.vendor.overlay.theme=com.google.android.systemui.gxoverlay" >> $1/product/etc/build.prop
